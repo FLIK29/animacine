@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AnimaCine — Panel Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg:#f4f1eb;--surface:#edeae2;--card:#ffffff;--border:#d8d4c8;
+  --ink:#1a1916;--ink2:#4a4840;--muted:#9a9690;
+  --red:#c0392b;--red-dim:#f5e8e7;--green:#1e6f4a;--green-dim:#e4f2eb;
+  --amber:#b45309;--amber-dim:#fef3cd;--radius:6px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--ink);font-family:'Inconsolata',monospace;min-height:100vh;display:flex;}
+
+/* LOGIN SCREEN */
+.login-screen{position:fixed;inset:0;background:var(--ink);display:flex;align-items:center;justify-content:center;z-index:999;}
+.login-box{background:#1e1d1a;border:1px solid #333;border-radius:10px;padding:2.5rem;width:100%;max-width:360px;}
+.login-logo{font-family:'Syne',sans-serif;font-size:1.5rem;font-weight:800;color:#c9a84c;margin-bottom:.3rem;}
+.login-logo span{color:#f4f1eb;}
+.login-sub{font-size:.75rem;color:#666;margin-bottom:2rem;text-transform:uppercase;letter-spacing:.08em;}
+.login-input{width:100%;background:#111;border:1px solid #333;border-radius:6px;padding:.65rem .9rem;color:#f4f1eb;font-family:'Inconsolata',monospace;font-size:.9rem;outline:none;margin-bottom:.8rem;transition:border-color .2s;}
+.login-input:focus{border-color:#c9a84c;}
+.login-btn{width:100%;background:#c9a84c;color:#0a0a0b;border:none;padding:.7rem;border-radius:6px;cursor:pointer;font-family:'Inconsolata',monospace;font-size:.9rem;font-weight:500;transition:background .2s;}
+.login-btn:hover{background:#e0bc5e;}
+.login-error{color:#e8613a;font-size:.8rem;margin-bottom:.6rem;min-height:1.1em;}
+
+/* SIDEBAR */
+.sidebar{width:220px;flex-shrink:0;background:var(--ink);color:#f4f1eb;display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
+.sidebar-logo{padding:1.8rem 1.5rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.1);font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:800;}
+.sidebar-logo span{color:#c9a84c;}
+.sidebar-role{font-size:.65rem;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.1em;margin-top:.2rem;}
+.sidebar-nav{flex:1;padding:1.2rem 0;}
+.nav-section{font-size:.6rem;text-transform:uppercase;letter-spacing:.12em;color:rgba(255,255,255,.3);padding:.6rem 1.5rem .3rem;}
+.nav-item{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.5rem;cursor:pointer;font-size:.85rem;color:rgba(255,255,255,.6);transition:all .15s;border-left:2px solid transparent;font-family:'Inconsolata',monospace;}
+.nav-item:hover{color:#fff;background:rgba(255,255,255,.05);}
+.nav-item.active{color:#fff;border-left-color:#c9a84c;background:rgba(255,255,255,.07);}
+.nav-icon{font-size:1rem;width:18px;text-align:center;}
+.sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(255,255,255,.1);font-size:.75rem;color:rgba(255,255,255,.35);}
+.sidebar-footer a{color:rgba(255,255,255,.5);text-decoration:none;display:block;margin-top:.3rem;transition:color .15s;}
+.sidebar-footer a:hover{color:#fff;}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar h1{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:700;}
+.topbar-actions{display:flex;gap:.7rem;align-items:center;}
+.btn{font-family:'Inconsolata',monospace;font-size:.8rem;padding:.45rem 1rem;border-radius:var(--radius);cursor:pointer;border:1px solid var(--border);transition:all .15s;display:inline-flex;align-items:center;gap:.4rem;}
+.btn-primary{background:var(--ink);color:#f4f1eb;border-color:var(--ink);}
+.btn-primary:hover{background:#333;}
+.btn-outline{background:none;color:var(--ink2);}
+.btn-outline:hover{background:var(--surface);}
+.btn-danger{background:var(--red-dim);color:var(--red);border-color:#f0d0ce;}
+.btn-danger:hover{background:#f0d0ce;}
+.content{padding:2rem;flex:1;}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.4rem;}
+.stat-label{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.4rem;}
+.stat-value{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;line-height:1;}
+.stat-sub{font-size:.75rem;color:var(--muted);margin-top:.3rem;}
+
+/* TOOLBAR & TABLE */
+.toolbar{display:flex;align-items:center;gap:.8rem;margin-bottom:1.2rem;flex-wrap:wrap;}
+.toolbar-search{flex:1;min-width:200px;max-width:320px;position:relative;}
+.toolbar-search input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .9rem .5rem 2.2rem;font-family:'Inconsolata',monospace;font-size:.85rem;color:var(--ink);outline:none;transition:border-color .15s;}
+.toolbar-search input:focus{border-color:var(--ink);}
+.toolbar-search svg{position:absolute;left:.7rem;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;}
+.filter-select{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:.5rem .8rem;font-family:'Inconsolata',monospace;font-size:.82rem;color:var(--ink2);cursor:pointer;outline:none;}
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+table{width:100%;border-collapse:collapse;}
+thead{background:var(--surface);}
+th{text-align:left;padding:.7rem 1rem;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-weight:500;white-space:nowrap;border-bottom:1px solid var(--border);}
+td{padding:.75rem 1rem;font-size:.85rem;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:var(--surface);}
+.col-id{color:var(--muted);font-size:.75rem;width:50px;}
+.col-title{font-weight:500;}
+.badge{display:inline-block;padding:.2rem .55rem;border-radius:50px;font-size:.68px;font-weight:500;}
+.badge{font-size:.68rem;}
+.badge-genre{background:var(--amber-dim);color:var(--amber);}
+.badge-active{background:var(--green-dim);color:var(--green);}
+.badge-inactive{background:var(--red-dim);color:var(--red);}
+.stars-display{color:#c9a84c;font-size:.9rem;}
+.action-btn{background:none;border:1px solid var(--border);padding:.3rem .6rem;border-radius:var(--radius);cursor:pointer;font-size:.75rem;font-family:'Inconsolata',monospace;transition:all .15s;margin-right:.3rem;}
+.action-btn:hover{background:var(--surface);}
+.action-btn.edit:hover{border-color:var(--amber);color:var(--amber);}
+.action-btn.delete:hover{border-color:var(--red);color:var(--red);}
+.empty-row td{text-align:center;padding:3rem;color:var(--muted);}
+.loading-row td{text-align:center;padding:2rem;color:var(--muted);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,25,22,.6);backdrop-filter:blur(4px);z-index:200;display:none;align-items:center;justify-content:center;padding:2rem;}
+.modal-overlay.open{display:flex;animation:fadeIn .2s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:520px;max-height:92vh;overflow-y:auto;animation:popIn .22s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.97) translateY(10px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.modal-header{padding:1.4rem 1.5rem 1rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.modal-header h2{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
+.modal-close{background:none;border:1px solid var(--border);width:28px;height:28px;border-radius:var(--radius);cursor:pointer;font-size:.9rem;color:var(--muted);transition:all .15s;}
+.modal-close:hover{border-color:var(--red);color:var(--red);}
+.modal-body{padding:1.4rem 1.5rem;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+.form-group{margin-bottom:1rem;}
+.form-group.full{grid-column:1/-1;}
+label{display:block;font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:.55rem .8rem;font-family:'Inconsolata',monospace;font-size:.88rem;color:var(--ink);outline:none;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{border-color:var(--ink);}
+textarea{resize:vertical;min-height:80px;}
+.form-actions{display:flex;justify-content:flex-end;gap:.7rem;padding-top:1rem;border-top:1px solid var(--border);margin-top:1rem;}
+.confirm-modal .modal-body{text-align:center;padding:2rem 1.5rem;}
+.confirm-icon{font-size:2.5rem;margin-bottom:.8rem;}
+.confirm-modal h3{font-family:'Syne',sans-serif;margin-bottom:.5rem;}
+.confirm-modal p{color:var(--muted);font-size:.85rem;margin-bottom:1rem;}
+
+/* VIEW */
+.view{display:none;}
+.view.active{display:block;}
+
+/* TOAST */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--ink);color:#f4f1eb;padding:.65rem 1.2rem;border-radius:var(--radius);font-size:.82rem;opacity:0;transform:translateY(10px);transition:all .25s;z-index:999;pointer-events:none;}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.error{border-left:3px solid var(--red);}
+.toast.success{border-left:3px solid #2ecc71;}
+
+@media(max-width:640px){
+  body{flex-direction:column;}
+  .sidebar{width:100%;height:auto;}
+  .stats-row{grid-template-columns:1fr 1fr;}
+  .form-row{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">Anima<span>Cine</span></div>
+    <div class="login-sub">Panel de Administrador</div>
+    <div class="login-error" id="loginError"></div>
+    <input class="login-input" type="email" id="adminEmail" placeholder="Correo electrónico" value="admin@animacine.com"/>
+    <input class="login-input" type="password" id="adminPassword" placeholder="Contraseña"/>
+    <button class="login-btn" onclick="adminLogin()">Entrar al panel</button>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">Anima<span>Cine</span><div class="sidebar-role">Panel Administrador</div></div>
+  <nav class="sidebar-nav">
+    <div class="nav-section">Gestión</div>
+    <div class="nav-item active" onclick="switchView('peliculas',this)"><span class="nav-icon">🎬</span> Películas</div>
+    <div class="nav-item" onclick="switchView('usuarios',this)"><span class="nav-icon">👥</span> Usuarios</div>
+    <div class="nav-section">Catálogo</div>
+    <div class="nav-item" onclick="switchView('generos',this)"><span class="nav-icon">🏷️</span> Géneros</div>
+    <div class="nav-item" onclick="switchView('estudios',this)"><span class="nav-icon">🏠</span> Estudios</div>
+  </nav>
+  <div class="sidebar-footer">
+    <span id="adminName">—</span>
+    <a href="#" onclick="adminLogout()">← Cerrar sesión</a>
+    <a href="catalogo-animadas.html">Ver catálogo público</a>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <h1 id="topbarTitle">Gestión de Películas</h1>
+    <div class="topbar-actions">
+      <button class="btn btn-outline" onclick="recargarVista()">↻ Actualizar</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- PELÍCULAS -->
+    <div class="view active" id="view-peliculas">
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-label">Total películas</div><div class="stat-value" id="statTotal">—</div><div class="stat-sub">en catálogo</div></div>
+        <div class="stat-card"><div class="stat-label">Géneros</div><div class="stat-value" id="statGeneros">—</div><div class="stat-sub">categorías</div></div>
+        <div class="stat-card"><div class="stat-label">Mejor calificada</div><div class="stat-value" id="statTop">—</div><div class="stat-sub" id="statTopName">—</div></div>
+        <div class="stat-card"><div class="stat-label">Más reciente</div><div class="stat-value" id="statRecent">—</div><div class="stat-sub" id="statRecentName">—</div></div>
+      </div>
+      <div class="toolbar">
+        <div class="toolbar-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchPel" placeholder="Buscar..." oninput="filtrarPeliculas()"/>
+        </div>
+        <select class="filter-select" id="filterGenero" onchange="filtrarPeliculas()"><option value="">Todos los géneros</option></select>
+        <button class="btn btn-primary" onclick="openAddModal()">＋ Nueva película</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Título</th><th>Género</th><th>Año</th><th>Estudio</th><th>Promedio</th><th>Acciones</th></tr></thead>
+        <tbody id="peliculasBody"><tr class="loading-row"><td colspan="7">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- USUARIOS -->
+    <div class="view" id="view-usuarios">
+      <div class="toolbar">
+        <div class="toolbar-search">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" id="searchUsr" placeholder="Buscar usuario..." oninput="filtrarUsuarios()"/>
+        </div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr></thead>
+        <tbody id="usuariosBody"><tr class="loading-row"><td colspan="6">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- GÉNEROS -->
+    <div class="view" id="view-generos">
+      <div class="toolbar">
+        <button class="btn btn-primary" onclick="openModal('generoModal')">＋ Nuevo género</button>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>Acciones</th></tr></thead>
+        <tbody id="generosBody"><tr class="loading-row"><td colspan="3">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+    <!-- ESTUDIOS -->
+    <div class="view" id="view-estudios">
+      <div class="table-wrap"><table>
+        <thead><tr><th>ID</th><th>Nombre</th><th>País</th></tr></thead>
+        <tbody id="estudiosBody"><tr class="loading-row"><td colspan="3">Cargando...</td></tr></tbody>
+      </table></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- MODAL PELÍCULA -->
+<div class="modal-overlay" id="pelModal" onclick="closeModalOutside(event,'pelModal')">
+  <div class="modal">
+    <div class="modal-header"><h2 id="pelModalTitle">Nueva película</h2><button class="modal-close" onclick="closeModal('pelModal')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="pelID"/>
+      <div class="form-row">
+        <div class="form-group full"><label>Título *</label><input type="text" id="pelTitulo" placeholder="Ej. El viaje de Chihiro"/></div>
+        <div class="form-group"><label>Año *</label><input type="number" id="pelAnio" min="1900" max="2099" placeholder="2024"/></div>
+        <div class="form-group"><label>Duración (min)</label><input type="number" id="pelDuracion" min="1" placeholder="95"/></div>
+        <div class="form-group"><label>Género *</label><select id="pelGenero"></select></div>
+        <div class="form-group"><label>Estudio *</label><select id="pelEstudio"></select></div>
+        <div class="form-group full"><label>URL del póster</label><input type="text" id="pelPoster" placeholder="https://..."/></div>
+        <div class="form-group full"><label>Sinopsis</label><textarea id="pelSinopsis" placeholder="Descripción breve..."></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeModal('pelModal')">Cancelar</button>
+        <button class="btn btn-primary" id="btnGuardar" onclick="guardarPelicula()">Guardar película</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CONFIRMAR ELIMINAR -->
+<div class="modal-overlay" id="deleteModal" onclick="closeModalOutside(event,'deleteModal')">
+  <div class="modal confirm-modal" style="max-width:380px">
+    <div class="modal-header"><h2>Confirmar eliminación</h2><button class="modal-close" onclick="closeModal('deleteModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="confirm-icon">🗑️</div>
+      <h3>¿Eliminar película?</h3>
+      <p id="deleteMovieName" style="margin-bottom:.5rem;font-weight:500"></p>
+      <p>La película se desactivará del catálogo público.</p>
+      <div style="display:flex;gap:.7rem;justify-content:center;margin-top:1.5rem">
+        <button class="btn btn-outline" onclick="closeModal('deleteModal')">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmarEliminar()">Sí, eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL GÉNERO -->
+<div class="modal-overlay" id="generoModal" onclick="closeModalOutside(event,'generoModal')">
+  <div class="modal" style="max-width:360px">
+    <div class="modal-header"><h2>Nuevo género</h2><button class="modal-close" onclick="closeModal('generoModal')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-group"><label>Nombre *</label><input type="text" id="generoNombre" placeholder="Ej. Terror"/></div>
+      <div class="form-actions">
+        <button class="btn btn-outline" onclick="closeModal('generoModal')">Cancelar</button>
+        <button class="btn btn-primary" onclick="guardarGenero()">Agregar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  CONFIGURACIÓN
+// ═══════════════════════════════════════════════
+const API = 'http://localhost:3000/api';
+
+let token       = null;
+let deleteTarget = null;
+let peliculasData = [];
+let generosData   = [];
+let estudiosData  = [];
+let usuariosData  = [];
+
+// ═══════════════════════════════════════════════
+//  AUTH ADMIN
+// ═══════════════════════════════════════════════
+async function adminLogin() {
+  const email    = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  document.getElementById('loginError').textContent = '';
+
+  try {
+    const res  = await fetch(`${API}/auth/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) { document.getElementById('loginError').textContent = data.error; return; }
+    if (data.usuario.rol !== 'Administrador') {
+      document.getElementById('loginError').textContent = 'Acceso solo para administradores'; return;
+    }
+
+    token = data.token;
+    document.getElementById('adminName').textContent = data.usuario.nombre;
+    document.getElementById('loginScreen').style.display = 'none';
+    await cargarTodo();
+  } catch {
+    document.getElementById('loginError').textContent = 'Error de conexión. ¿Está el backend corriendo?';
+  }
+}
+
+function adminLogout() {
+  token = null;
+  document.getElementById('loginScreen').style.display = 'flex';
+}
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` };
+}
+
+// ═══════════════════════════════════════════════
+//  CARGA DE DATOS
+// ═══════════════════════════════════════════════
+async function cargarTodo() {
+  await Promise.all([cargarPeliculas(), cargarGeneros(), cargarEstudios()]);
+}
+
+async function cargarPeliculas() {
+  try {
+    const res = await fetch(`${API}/peliculas`, { headers: { Authorization: `Bearer ${token}` } });
+    peliculasData = await res.json();
+    renderPeliculas(peliculasData);
+    updateStats();
+  } catch { showToast('Error al cargar películas', 'error'); }
+}
+
+async function cargarGeneros() {
+  try {
+    const res = await fetch(`${API}/peliculas/generos/lista`, { headers: { Authorization: `Bearer ${token}` } });
+    generosData = await res.json();
+    renderGeneros();
+    populateGeneroFilter();
+    populateFormSelects();
+  } catch {}
+}
+
+async function cargarEstudios() {
+  try {
+    // Endpoint de estudios — agregar al backend si no existe
+    const res = await fetch(`${API}/estudios`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) { estudiosData = await res.json(); }
+    renderEstudios();
+    populateFormSelects();
+  } catch { renderEstudios(); }
+}
+
+async function cargarUsuarios() {
+  try {
+    const res = await fetch(`${API}/usuarios`, { headers: { Authorization: `Bearer ${token}` } });
+    if (res.ok) { usuariosData = await res.json(); renderUsuarios(usuariosData); }
+    else { document.getElementById('usuariosBody').innerHTML = `<tr class="empty-row"><td colspan="6">Endpoint de usuarios pendiente de implementar</td></tr>`; }
+  } catch { document.getElementById('usuariosBody').innerHTML = `<tr class="empty-row"><td colspan="6">Error al cargar usuarios</td></tr>`; }
+}
+
+// ═══════════════════════════════════════════════
+//  NAVEGACIÓN
+// ═══════════════════════════════════════════════
+const titles = { peliculas:'Gestión de Películas', usuarios:'Gestión de Usuarios', generos:'Géneros', estudios:'Estudios' };
+
+function switchView(view, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+view).classList.add('active');
+  el.classList.add('active');
+  document.getElementById('topbarTitle').textContent = titles[view];
+  if (view === 'usuarios') cargarUsuarios();
+}
+
+function recargarVista() { cargarTodo(); showToast('Datos actualizados', 'success'); }
+
+// ═══════════════════════════════════════════════
+//  STATS
+// ═══════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('statTotal').textContent   = peliculasData.length;
+  document.getElementById('statGeneros').textContent = generosData.length;
+  const top = [...peliculasData].sort((a,b)=>(b.PromedioCalificacion||0)-(a.PromedioCalificacion||0))[0];
+  const rec = [...peliculasData].sort((a,b)=>(b.Anio||0)-(a.Anio||0))[0];
+  if (top) { document.getElementById('statTop').textContent = (top.PromedioCalificacion||0).toFixed(1); document.getElementById('statTopName').textContent = top.Titulo; }
+  if (rec) { document.getElementById('statRecent').textContent = rec.Anio; document.getElementById('statRecentName').textContent = rec.Titulo; }
+}
+
+// ═══════════════════════════════════════════════
+//  PELÍCULAS
+// ═══════════════════════════════════════════════
+function renderPeliculas(list) {
+  const body = document.getElementById('peliculasBody');
+  if (!list.length) { body.innerHTML = `<tr class="empty-row"><td colspan="7">No hay películas</td></tr>`; return; }
+  body.innerHTML = list.map(p => `
+    <tr>
+      <td class="col-id">#${p.PeliculaID}</td>
+      <td class="col-title">${p.Titulo}</td>
+      <td><span class="badge badge-genre">${p.Genero||'—'}</span></td>
+      <td>${p.Anio}</td>
+      <td>${p.Estudio||'—'}</td>
+      <td><span style="color:#c9a84c">${p.PromedioCalificacion ? '★ '+p.PromedioCalificacion.toFixed(1) : '—'}</span></td>
+      <td>
+        <button class="action-btn edit" onclick="openEditModal(${p.PeliculaID})">✏️ Editar</button>
+        <button class="action-btn delete" onclick="openDeleteModal(${p.PeliculaID},'${p.Titulo.replace(/'/g,"\\'")}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function filtrarPeliculas() {
+  const q = document.getElementById('searchPel').value.toLowerCase();
+  const g = document.getElementById('filterGenero').value;
+  renderPeliculas(peliculasData.filter(p =>
+    (p.Titulo.toLowerCase().includes(q) || (p.Estudio||'').toLowerCase().includes(q)) &&
+    (!g || (p.Genero||'') === g)
+  ));
+}
+
+function populateGeneroFilter() {
+  const sel = document.getElementById('filterGenero');
+  sel.innerHTML = '<option value="">Todos los géneros</option>' +
+    generosData.map(g=>`<option value="${g.Nombre||g.nombre}">${g.Nombre||g.nombre}</option>`).join('');
+}
+
+function populateFormSelects() {
+  const gs = document.getElementById('pelGenero');
+  const es = document.getElementById('pelEstudio');
+  if (gs) gs.innerHTML = generosData.map(g=>`<option value="${g.GeneroID||g.id}">${g.Nombre||g.nombre}</option>`).join('');
+  if (es) es.innerHTML = estudiosData.length
+    ? estudiosData.map(e=>`<option value="${e.EstudioID||e.id}">${e.Nombre||e.nombre}</option>`).join('')
+    : '<option value="1">Studio Ghibli</option><option value="2">Pixar</option><option value="3">Walt Disney</option><option value="4">Sony Pictures</option>';
+}
+
+function openAddModal() {
+  document.getElementById('pelModalTitle').textContent = 'Nueva película';
+  document.getElementById('pelID').value = '';
+  ['pelTitulo','pelAnio','pelDuracion','pelPoster','pelSinopsis'].forEach(id=>document.getElementById(id).value='');
+  populateFormSelects();
+  openModal('pelModal');
+}
+
+function openEditModal(id) {
+  const p = peliculasData.find(x=>x.PeliculaID===id);
+  if (!p) return;
+  document.getElementById('pelModalTitle').textContent = 'Editar película';
+  document.getElementById('pelID').value       = p.PeliculaID;
+  document.getElementById('pelTitulo').value   = p.Titulo;
+  document.getElementById('pelAnio').value     = p.Anio;
+  document.getElementById('pelDuracion').value = p.Duracion||'';
+  document.getElementById('pelPoster').value   = p.PosterURL||'';
+  document.getElementById('pelSinopsis').value = p.Sinopsis||'';
+  populateFormSelects();
+  openModal('pelModal');
+}
+
+async function guardarPelicula() {
+  const id       = document.getElementById('pelID').value;
+  const titulo   = document.getElementById('pelTitulo').value.trim();
+  const anio     = parseInt(document.getElementById('pelAnio').value);
+  const duracion = parseInt(document.getElementById('pelDuracion').value)||null;
+  const posterURL= document.getElementById('pelPoster').value.trim()||null;
+  const sinopsis = document.getElementById('pelSinopsis').value.trim()||null;
+  const generoID = parseInt(document.getElementById('pelGenero').value);
+  const estudioID= parseInt(document.getElementById('pelEstudio').value);
+
+  if (!titulo||!anio||!generoID||!estudioID) { showToast('Completa los campos obligatorios','error'); return; }
+
+  const btn = document.getElementById('btnGuardar');
+  btn.textContent = 'Guardando...'; btn.disabled = true;
+
+  try {
+    const url    = id ? `${API}/peliculas/${id}` : `${API}/peliculas`;
+    const method = id ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify({ titulo, anio, duracion, posterURL, sinopsis, generoID, estudioID }) });
+    const data   = await res.json();
+    if (!res.ok) { showToast(data.error||'Error al guardar','error'); return; }
+    closeModal('pelModal');
+    await cargarPeliculas();
+    showToast(id ? 'Película actualizada' : 'Película agregada', 'success');
+  } catch { showToast('Error de conexión','error'); }
+  finally { btn.textContent = 'Guardar película'; btn.disabled = false; }
+}
+
+function openDeleteModal(id, titulo) {
+  deleteTarget = id;
+  document.getElementById('deleteMovieName').textContent = titulo;
+  openModal('deleteModal');
+}
+
+async function confirmarEliminar() {
+  try {
+    const res = await fetch(`${API}/peliculas/${deleteTarget}`, { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) { showToast('Error al eliminar','error'); return; }
+    closeModal('deleteModal');
+    await cargarPeliculas();
+    showToast('Película eliminada del catálogo','success');
+  } catch { showToast('Error de conexión','error'); }
+}
+
+// ═══════════════════════════════════════════════
+//  USUARIOS
+// ═══════════════════════════════════════════════
+function renderUsuarios(list) {
+  const body = document.getElementById('usuariosBody');
+  if (!list||!list.length) { body.innerHTML=`<tr class="empty-row"><td colspan="6">No hay usuarios</td></tr>`; return; }
+  body.innerHTML = list.map(u=>`
+    <tr>
+      <td class="col-id">#${u.UsuarioID||u.id}</td>
+      <td class="col-title">${u.Nombre||u.nombre}</td>
+      <td>${u.Email||u.email}</td>
+      <td><span class="badge ${(u.Rol||u.rol)==='Administrador'?'badge-genre':'badge-active'}">${u.Rol||u.rol}</span></td>
+      <td><span class="badge ${u.Activo||u.activo?'badge-active':'badge-inactive'}">${u.Activo||u.activo?'Activo':'Inactivo'}</span></td>
+      <td><button class="action-btn edit" onclick="showToast('Gestión de usuarios próximamente','success')">⚙️ Gestionar</button></td>
+    </tr>`).join('');
+}
+
+function filtrarUsuarios() {
+  const q = document.getElementById('searchUsr').value.toLowerCase();
+  renderUsuarios(usuariosData.filter(u=>(u.Nombre||u.nombre||'').toLowerCase().includes(q)||(u.Email||u.email||'').toLowerCase().includes(q)));
+}
+
+// ═══════════════════════════════════════════════
+//  GÉNEROS
+// ═══════════════════════════════════════════════
+function renderGeneros() {
+  const body = document.getElementById('generosBody');
+  body.innerHTML = generosData.map(g=>`
+    <tr>
+      <td class="col-id">#${g.GeneroID||g.id}</td>
+      <td class="col-title">${g.Nombre||g.nombre}</td>
+      <td><button class="action-btn delete" onclick="showToast('Eliminar género próximamente','success')">🗑</button></td>
+    </tr>`).join('');
+}
+
+async function guardarGenero() {
+  const nombre = document.getElementById('generoNombre').value.trim();
+  if (!nombre) { showToast('Escribe un nombre','error'); return; }
+  // Aquí conectar a POST /api/generos cuando agregues ese endpoint
+  showToast('Endpoint de géneros pendiente — agregar a la API','error');
+}
+
+// ═══════════════════════════════════════════════
+//  ESTUDIOS
+// ═══════════════════════════════════════════════
+function renderEstudios() {
+  const body = document.getElementById('estudiosBody');
+  if (!estudiosData.length) { body.innerHTML=`<tr class="empty-row"><td colspan="3">Endpoint de estudios pendiente</td></tr>`; return; }
+  body.innerHTML = estudiosData.map(e=>`
+    <tr>
+      <td class="col-id">#${e.EstudioID||e.id}</td>
+      <td class="col-title">${e.Nombre||e.nombre}</td>
+      <td>${e.Pais||e.pais||'—'}</td>
+    </tr>`).join('');
+}
+
+// ═══════════════════════════════════════════════
+//  MODALES
+// ═══════════════════════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); document.body.style.overflow='hidden'; }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function closeModalOutside(e,id){ if(e.target.id===id) closeModal(id); }
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') ['pelModal','deleteModal','generoModal'].forEach(closeModal); });
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+let toastTimer;
+function showToast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=`toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// Enter en login
+document.getElementById('adminPassword').addEventListener('keydown', e=>{ if(e.key==='Enter') adminLogin(); });
+</script>
+</body>
+</html>
